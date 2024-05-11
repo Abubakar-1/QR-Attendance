@@ -10,6 +10,7 @@ const teacherSchema = new mongoose.Schema({
 // Define schema for subjects collection
 const subjectSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  subjectCode: { type: String, required: true },
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
 });
 

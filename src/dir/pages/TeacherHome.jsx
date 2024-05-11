@@ -40,14 +40,15 @@ export const TeacherHome = () => {
 
   const { user } = useContext(UserContext);
 
-  const TABLE_HEAD = ["Subject", "Date", "Time", "Generate", "View Attendance"];
+  const TABLE_HEAD = ["Course", "Date", "Time", "Generate", "View Attendance"];
   const ATTENDANCE_TABLE_HEAD = [
     "Student Name",
     "Time",
     "Data",
     "Status",
-    "Class",
-    "Subject",
+    "Lecture",
+    "Course",
+    "Course Code",
   ];
   const tableClasses = "p-4 border-b border-blue-gray-50";
 
@@ -75,7 +76,7 @@ export const TeacherHome = () => {
           time: lessonTime,
         })
         .then((result) => {
-          toast.success("Lesson created successfully");
+          toast.success("Lecture created successfully");
           viewClasses();
           console.log(result);
           setOpen(false);
@@ -85,16 +86,22 @@ export const TeacherHome = () => {
           toast.error(error.response.data.error);
         });
     } catch (error) {
-      alert("An error occured while trying to create lesson");
+      alert("An error occured while trying to create lecture");
       console.error(error);
     }
   };
 
   const generateQrCode = (classId) => {
     console.log("generating");
-    const qrData = classId;
+    const expirationTime = new Date(Date.now() + 10 * 60 * 1000);
+    const qrData = { classId, expirationTime };
     setfinalQrData(qrData);
     setShowQr(true);
+    const strrr = JSON.stringify(qrData);
+    const ppp = JSON.parse(strrr);
+    console.log("strrr", strrr);
+    console.log("PPP", ppp);
+    // console.log(JSON.stringify(qrData), "qr");
   };
 
   const getSpecificClass = (classId) => {
@@ -109,6 +116,7 @@ export const TeacherHome = () => {
           Status: entry.status,
           Class: foundClass._id,
           Subject: foundClass.subject.name,
+          SubjectCode: foundClass.subject.subjectCode || "null",
         }));
         setClassAttendance(attendanceRows);
       });
@@ -124,7 +132,7 @@ export const TeacherHome = () => {
       await axios.get(`http://localhost:5006/teachers/${id}`).then((result) => {
         console.log(result);
         const teacherDetail = result.data;
-        console.log(teacherDetail, "teacher");
+        console.log(teacherDetail, "lecturer");
         setTeacherDetails(teacherDetail);
       });
     } catch (error) {
@@ -180,12 +188,12 @@ export const TeacherHome = () => {
       <div className="p-10 text-2xl text-center flex items-center justify-center flex-col">
         <h2>Welcome, {name}</h2>
         <Button onClick={handleOpen} color="blue" className="m-3">
-          Create a Class
+          Create a Lecture
         </Button>
       </div>
       <div className="p-5" id="courses">
         <Typography color="blue" variant="h5">
-          List of Subjects You Teach
+          List of Courses You Teach
         </Typography>
         <ul>
           {subjects?.map((subject, key) => (
@@ -204,14 +212,14 @@ export const TeacherHome = () => {
         <Card className="mx-auto w-full max-w-[24rem]">
           <CardBody className="flex flex-col gap-4">
             <Typography variant="h4" color="blue-gray">
-              Create a Lesson
+              Create a Lecture
             </Typography>
 
             <Typography className="-mb-2" variant="h6">
-              Subject Name
+              Course Name
             </Typography>
             <Select
-              label="Subject"
+              label="Course"
               color="blue"
               value={lessonSubject}
               onChange={(e) => setLessonSubject(e)}
@@ -224,7 +232,7 @@ export const TeacherHome = () => {
             </Select>
 
             <Typography className="-mb-2" variant="h6">
-              Class Date
+              Lecture Date
             </Typography>
             <Input
               color="blue"
@@ -235,7 +243,7 @@ export const TeacherHome = () => {
             />
 
             <Typography className="-mb-2" variant="h6">
-              Class Time
+              Lecture Time
             </Typography>
             <Input
               color="blue"
@@ -253,7 +261,7 @@ export const TeacherHome = () => {
               type="submit"
               onClick={createLesson}
             >
-              Register
+              Create Lecture
             </Button>
           </CardFooter>
         </Card>
@@ -361,6 +369,7 @@ export const TeacherHome = () => {
                 </td>
                 <td className={tableClasses}>{row.Class}</td>
                 <td className={tableClasses}>{row.Subject}</td>
+                <td className={tableClasses}>{row.SubjectCode}</td>
               </tr>
             ))}
           </tbody>
@@ -376,10 +385,10 @@ export const TeacherHome = () => {
         <Card className="mx-auto w-full max-w-[24rem]">
           <CardBody className="flex flex-col gap-4">
             <h2 className="text-center">
-              QR Code for Class ID: {finalQrData}{" "}
+              QR Code for Lecture ID: {finalQrData?.classId}
             </h2>
             <div className="flex items-center justify-center">
-              <QRCode value={finalQrData} />
+              <QRCode value={JSON.stringify(finalQrData)} />
             </div>
           </CardBody>
         </Card>

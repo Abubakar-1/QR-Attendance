@@ -27,7 +27,7 @@ export const Student = () => {
   axios.defaults.withCredentials = true;
   const { id } = useParams();
   const [studentDetails, setStudentdetails] = useState();
-  const { name, email, subjects, _id } = studentDetails || {};
+  const { name, _id } = studentDetails || {};
   const [openNav, setOpenNav] = useState(false);
   const [cameraClicked, setCameraClicked] = useState(false);
   const [scannedCode, setScannedCode] = useState(null);
@@ -116,7 +116,15 @@ export const Student = () => {
     }
   };
 
-  const TABLE_HEAD = ["S/N", "Time", "Date", "Status", "Class", "Subject"];
+  const TABLE_HEAD = [
+    "S/N",
+    "Time",
+    "Date",
+    "Status",
+    "Lecture",
+    "Course",
+    "Course Code",
+  ];
 
   const classes = "p-4 border-b border-blue-gray-50";
   const [attendanceRows, setAttendanceRows] = useState([]);
@@ -133,6 +141,7 @@ export const Student = () => {
               status: entry.status,
               class: entry.class._id, // Assuming class name is available
               subject: curr.subject.name,
+              subejctCode: curr.subject.subjectCode || "null",
             }))
           );
         },
@@ -142,23 +151,50 @@ export const Student = () => {
     }
   };
 
+  const isQrCodeExpired = (qrData) => {
+    console.log("checking expiration");
+    const currentTime = new Date();
+    const currentTimeISO = currentTime.toISOString();
+
+    console.log(currentTimeISO);
+    console.log(qrData.expirationTime);
+    console.log(currentTime > qrData.expirationTime);
+    return currentTimeISO > qrData.expirationTime;
+  };
+
   const handleScan = async (data) => {
     if (data) {
-      setScannedCode(data);
-      setCameraClicked(false);
-      console.log(data);
       try {
-        const response = await axios.post(
-          "http://localhost:5006/mark-attendance",
-          {
-            classId: data,
-            studentId: _id,
-          }
-        );
-        console.log(response);
+        const scannedData = JSON.parse(data);
+        console.log("scannedData", scannedData);
+        if (isQrCodeExpired(scannedData)) {
+          console.log("QR code has expired");
+          // Handle expired QR code, for example:
+          toast.error("QR code has expired");
+          return;
+        }
+        setScannedCode(scannedData.classId);
+        setCameraClicked(false);
+
+        try {
+          console.log("actually scanning");
+          console.log(scannedData.classId, "sss");
+          const response = await axios.post(
+            "http://localhost:5006/mark-attendance",
+            {
+              classId: scannedData.classId,
+              studentId: _id,
+            }
+          );
+          console.log(response);
+        } catch (error) {
+          console.log("Error marking attendance", error);
+          toast.error("Error marking attendance");
+        }
       } catch (error) {
-        console.log("Error marking attendance", error);
-        toast.error("Error marking attendance");
+        console.log("Error parsing scanned data as JSON:", error);
+        // Handle error, for example:
+        toast.error("Error scanning QR code");
       }
     }
   };
@@ -204,7 +240,7 @@ export const Student = () => {
       <div className="p-10 text-2xl text-center flex items-center justify-center flex-col">
         <h2>Welcome, {name}</h2>
         <Button onClick={handleOpen} color="blue" className="m-3">
-          Register for Subjects
+          Register for Course
         </Button>
         <Card className="sm:w-[25%] m-10 p-10 flex items-center justify-center">
           <IconButton
@@ -235,7 +271,7 @@ export const Student = () => {
 
       <div className="p-5" id="courses">
         <Typography color="blue" variant="h5">
-          List of Subjects Registered for
+          List of Courses Registered for
         </Typography>
         <ul>
           {studentSubjects.map((subject, key) => (
@@ -255,11 +291,11 @@ export const Student = () => {
         <Card className="mx-auto w-full max-w-[24rem]">
           <CardBody className="flex flex-col gap-4">
             <Typography variant="h4" color="blue-gray">
-              Register for a Subject
+              Register for a Course
             </Typography>
 
             <Typography className="-mb-2" variant="h6">
-              Subject Name
+              Course Name
             </Typography>
             <Select
               label="Subject"
@@ -345,6 +381,7 @@ export const Student = () => {
                   </td>
                   <td className={classes}>{row.class}</td>
                   <td className={classes}>{row.subject}</td>
+                  <td className={classes}>{row.subejctCode}</td>
                 </tr>
               ))}
             </tbody>

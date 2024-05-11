@@ -156,10 +156,10 @@ app.get("/admin", validateToken, async (req, res) => {
 // Create a new subject
 app.post("/create-subject", async (req, res) => {
   try {
-    const { name, teacherId } = req.body;
+    const { name, subjectCode, teacherId } = req.body;
 
     // Initialize subject with an empty teacher field
-    let subject = new Subject({ name, teacher: null });
+    let subject = new Subject({ name, subjectCode, teacher: null });
 
     // If teacherId is provided, assign the teacher to the subject
     if (teacherId) {
@@ -352,7 +352,7 @@ app.get("/student/:studentId", async (req, res) => {
 
     // Find the student by ID
     const student = await Student.findById(studentId)
-      .populate("subjects_registered_for.subject", "name") // Populate subject details
+      .populate("subjects_registered_for.subject", "name subjectCode") // Populate subject details
       .populate("subjects_registered_for.attendance.class", "date time"); // Populate class details
 
     if (!student) {

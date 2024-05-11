@@ -30,7 +30,7 @@ export const SignIn = () => {
           userData.role === "student" && navigate(`/student/${userData._id}`);
         })
         .catch((error) => {
-          toast.error(error.response.data);
+          // toast.error(error.response.data);
           console.log(error);
         });
     } catch (error) {

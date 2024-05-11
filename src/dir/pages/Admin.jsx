@@ -30,13 +30,14 @@ export const Admin = () => {
   const [teacherDetails, setTeacherDetails] = useState([]);
   const [teacherId, setTeacherId] = useState("");
   const [subjectName, setSubjectName] = useState("");
+  const [subjectCode, setSubjectCode] = useState("");
   const [open, setOpen] = useState(false);
   const [subjectOpen, setSubjectOpen] = useState(false);
   const handleOpen = () => setOpen((cur) => !cur);
   const handleSubjectOpen = () => setSubjectOpen((cur) => !cur);
 
-  const TABLE_HEAD = ["S/N", "Name", "Email", "Subjects Registered For"];
-  const SUBJECT_TABLE_HEAD = ["S/N", "Name", "Teacher"];
+  const TABLE_HEAD = ["S/N", "Name", "Email", "Courses Registered For"];
+  const SUBJECT_TABLE_HEAD = ["S/N", "Name", "Course Code", "Lecturer"];
 
   const fetchAdminDetails = async () => {
     try {
@@ -138,6 +139,7 @@ export const Admin = () => {
       await axios
         .post("http://localhost:5006/create-subject", {
           name: subjectName,
+          subjectCode: subjectCode,
           teacherId: teacherId,
         })
         .then((result) => {
@@ -176,7 +178,7 @@ export const Admin = () => {
                 Create a User
               </Button>
               <Button onClick={handleSubjectOpen} color="blue" className="m-3">
-                Create Subject
+                Create Course
               </Button>
             </div>
           </div>
@@ -278,37 +280,48 @@ export const Admin = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {subjectDetails?.map(({ name, teacher }, index) => (
-                    <tr key={name} className="even:bg-blue-gray-50/50">
-                      <td className="p-4">
-                        <Typography
-                          variant="small"
-                          color="blue-gray"
-                          className="font-normal"
-                        >
-                          {index + 1}
-                        </Typography>
-                      </td>
-                      <td className="p-4">
-                        <Typography
-                          variant="small"
-                          color="blue-gray"
-                          className="font-normal"
-                        >
-                          {name}
-                        </Typography>
-                      </td>
-                      <td className="p-4">
-                        <Typography
-                          variant="small"
-                          color="blue-gray"
-                          className="font-normal"
-                        >
-                          {teacher.name}
-                        </Typography>
-                      </td>
-                    </tr>
-                  ))}
+                  {subjectDetails?.map(
+                    ({ name, teacher, subjectCode }, index) => (
+                      <tr key={name} className="even:bg-blue-gray-50/50">
+                        <td className="p-4">
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal"
+                          >
+                            {index + 1}
+                          </Typography>
+                        </td>
+                        <td className="p-4">
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal"
+                          >
+                            {name}
+                          </Typography>
+                        </td>
+                        <td className="p-4">
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal"
+                          >
+                            {subjectCode}
+                          </Typography>
+                        </td>
+                        <td className="p-4">
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal"
+                          >
+                            {teacher.name}
+                          </Typography>
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </Card>
@@ -359,7 +372,7 @@ export const Admin = () => {
                   onChange={(e) => setUserRole(e)}
                   color="blue"
                 >
-                  <Option value="teacher">Teacher</Option>
+                  <Option value="teacher">Lecturer</Option>
                   <Option value="admin">Admin</Option>
                   <Option value="student">Student</Option>
                 </Select>
@@ -381,7 +394,7 @@ export const Admin = () => {
                   type="submit"
                   onClick={createUsers}
                 >
-                  Sign In
+                  Create
                 </Button>
               </CardFooter>
             </Card>
@@ -403,7 +416,7 @@ export const Admin = () => {
                 <div className="flex items-center justify-center">
                   <div className="mb-1 flex flex-col gap-3 w-full">
                     <Typography className="-mb-2" variant="h6">
-                      Subject
+                      Course
                     </Typography>
                     <Input
                       color="blue"
@@ -412,10 +425,19 @@ export const Admin = () => {
                       onChange={(e) => setSubjectName(e.target.value)}
                     />
                     <Typography className="-mb-2" variant="h6">
-                      Teacher
+                      Course Code
+                    </Typography>
+                    <Input
+                      color="blue"
+                      label="Code"
+                      size="lg"
+                      onChange={(e) => setSubjectCode(e.target.value)}
+                    />
+                    <Typography className="-mb-2" variant="h6">
+                      Lecturer
                     </Typography>
                     <Select
-                      label="Teacher"
+                      label="Lecturer"
                       value={teacherId}
                       onChange={(e) => setTeacherId(e)}
                       color="blue"
