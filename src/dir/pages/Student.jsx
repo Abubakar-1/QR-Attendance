@@ -35,6 +35,10 @@ export const Student = () => {
   const [subjectDetails, setSubjectDetails] = useState([]);
   const [subjectName, setSubjectName] = useState("");
   const [studentSubjects, setStudentSubjects] = useState([]);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const nileUniversityLatitude = 9.018276910896537;
+  const nileUniversityLongitude = 7.4016056846574445;
 
   const handleOpen = () => setOpen((cur) => !cur);
 
@@ -167,17 +171,22 @@ export const Student = () => {
       try {
         const scannedData = JSON.parse(data);
         console.log("scannedData", scannedData);
+        if (!properLocation()) {
+          toast.error(
+            "You are not within Nile premises. Attendance Cannot be marked"
+          );
+          return;
+        }
         if (isQrCodeExpired(scannedData)) {
           console.log("QR code has expired");
-          // Handle expired QR code, for example:
           toast.error("QR code has expired");
           return;
         }
+        console.log("test");
         setScannedCode(scannedData.classId);
         setCameraClicked(false);
 
         try {
-          console.log("actually scanning");
           console.log(scannedData.classId, "sss");
           const response = await axios.post(
             "http://localhost:5006/mark-attendance",
@@ -193,11 +202,70 @@ export const Student = () => {
         }
       } catch (error) {
         console.log("Error parsing scanned data as JSON:", error);
-        // Handle error, for example:
         toast.error("Error scanning QR code");
       }
     }
   };
+
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+        },
+        (error) => {
+          console.error("Error getting user location:", error);
+          toast.error("Error getting user location");
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+      toast.error("Geolocation is not supported by this browser.");
+    }
+  };
+
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distance = R * c;
+    return distance;
+  }
+
+  useEffect(() => {
+    getLocation();
+  }, []);
+
+  function properLocation() {
+    const distanceToNileUniversity = calculateDistance(
+      latitude,
+      longitude,
+      nileUniversityLatitude,
+      nileUniversityLongitude
+    );
+
+    const thresholdDistance = 531.72;
+
+    if (distanceToNileUniversity <= thresholdDistance) {
+      console.log(
+        "Student is within Nile University's premises. Attendance can be marked."
+      );
+      return true;
+    } else {
+      console.log(
+        "Student is outside Nile University's premises. Attendance cannot be marked."
+      );
+      return false;
+    }
+  }
 
   useEffect(() => {
     getAttendance();
